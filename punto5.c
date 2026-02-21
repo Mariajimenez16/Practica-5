@@ -1,60 +1,78 @@
-#include <iostream>
-#include <thread>
-#include <unistd.h>   // para getpid()
-using namespace std;
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
 
-void acumulada(int n) {
+#define N 10
+
+// Hilo 1: Suma Acumulada
+void* hilo_acumulada(void* arg) {
     int suma = 0;
-    for(int i = 1; i <= n; i++) {
+    for(int i = 1; i <= N; i++)
         suma += i;
-    }
-    cout << "Hilo Acumulada - Resultado: " << suma << endl;
+
+    printf("[Hilo 1] Suma Acumulada hasta %d = %d\n", N, suma);
+    sleep(30);
+    pthread_exit(NULL);
 }
 
-void productoria(int n) {
-    int producto = 1;
-    for(int i = 1; i <= n; i++) {
+// Hilo 2: Productoria
+void* hilo_productoria(void* arg) {
+    long long producto = 1;
+    for(int i = 1; i <= N; i++)
         producto *= i;
-    }
-    cout << "Hilo Productoria - Resultado: " << producto << endl;
+
+    printf("[Hilo 2] Productoria hasta %d = %lld\n", N, producto);
+    sleep(30);
+    pthread_exit(NULL);
 }
 
-void potencia(int n) {
-    int resultado = 1;
-    for(int i = 0; i < n; i++) {
+// Hilo 3: 2^N
+void* hilo_potencia(void* arg) {
+    long long resultado = 1;
+    for(int i = 0; i < N; i++)
         resultado *= 2;
-    }
-    cout << "Hilo 2^n - Resultado: " << resultado << endl;
+
+    printf("[Hilo 3] 2 a la potencia de %d = %lld\n", N, resultado);
+    sleep(30);
+    pthread_exit(NULL);
 }
 
-void fibonacci(int n) {
-    int a = 0, b = 1, c;
-    cout << "Hilo Fibonacci: ";
-    for(int i = 0; i < n; i++) {
-        cout << a << " ";
-        c = a + b;
-        a = b;
-        b = c;
+// Hilo 4: Fibonacci
+void* hilo_fibonacci(void* arg) {
+    int t1 = 0, t2 = 1, siguiente;
+
+    for(int i = 1; i <= N; i++) {
+        siguiente = t1 + t2;
+        t1 = t2;
+        t2 = siguiente;
     }
-    cout << endl;
+
+    printf("[Hilo 4] Termino %d de Fibonacci = %d\n", N, t1);
+    sleep(30);
+    pthread_exit(NULL);
 }
 
 int main() {
-    int n;
-    cout << "Ingrese el valor de n: ";
-    cin >> n;
 
-    cout << "PID del proceso principal: " << getpid() << endl;
+    pthread_t hilos[4];
+    pid_t mi_pid = getpid();
 
-    thread t1(acumulada, n);
-    thread t2(productoria, n);
-    thread t3(potencia, n);
-    thread t4(fibonacci, n);
+    printf("\n====================================================\n");
+    printf(" PROCESO PRINCIPAL INICIADO\n");
+    printf(" EL PID DE ESTE PROCESO ES: %d\n", mi_pid);
+    printf(" ABRE OTRA TERMINAL RAPIDO Y EJECUTA: pstree -p %d\n", mi_pid);
+    printf("====================================================\n\n");
 
-    t1.join();
-    t2.join();
-    t3.join();
-    t4.join();
+    // Creación de los 4 hilos
+    pthread_create(&hilos[0], NULL, hilo_acumulada, NULL);
+    pthread_create(&hilos[1], NULL, hilo_productoria, NULL);
+    pthread_create(&hilos[2], NULL, hilo_potencia, NULL);
+    pthread_create(&hilos[3], NULL, hilo_fibonacci, NULL);
 
+    for(int i = 0; i < 4; i++)
+        pthread_join(hilos[i], NULL);
+
+    printf("\nTodos los hilos han terminado con éxito.\n");
     return 0;
 }
